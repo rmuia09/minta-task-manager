@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://json.schemastore.org/render.json
+services:
+  - type: web
+    name: minta-task-manager-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SEED_DEMO_DATA
+        value: "true"
+      - key: DEMO_NAME
+        value: Demo User
+      - key: DEMO_EMAIL
+        value: demo@example.com
+      # Render prompts for this demo-only password during Blueprint creation.
+      - key: DEMO_PASSWORD
+        sync: false

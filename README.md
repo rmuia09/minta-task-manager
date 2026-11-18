@@ -6,6 +6,9 @@ A native Android task manager app with user authentication and forgot-password f
 
 ```
 mobile-app-demo/
+├── render.yaml       # Render Blueprint for the backend
+├── scripts/
+│   └── distribute-android.sh  # Build + Firebase App Distribution upload
 ├── android/          # Native Android app (Kotlin + Jetpack Compose)
 │   ├── app/
 │   │   └── src/main/
@@ -73,6 +76,20 @@ The app uses `http://10.0.2.2:3000/` by default, which maps to your machine's `l
 - **Deployed demo**: follow [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md).
 
 Debug builds permit local HTTP traffic. Release builds disable body logging and require HTTPS.
+
+## Deploy the backend and Android app
+
+- **Backend on Render**: deploy the included `render.yaml` Blueprint by following [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md).
+- **Android on Firebase**: this is a native Android app, so use Firebase App Distribution rather than Firebase Hosting. Follow [FIREBASE_APP_DISTRIBUTION.md](FIREBASE_APP_DISTRIBUTION.md) to build an APK against the Render URL and invite testers.
+
+The quick upload command, after setting your own deployment values, is:
+
+```bash
+export API_BASE_URL="https://YOUR_SERVICE.onrender.com/"
+export FIREBASE_APP_ID="YOUR_FIREBASE_ANDROID_APP_ID"
+export FIREBASE_TESTERS="tester@example.com"
+./scripts/distribute-android.sh
+```
 
 ## API endpoints
 

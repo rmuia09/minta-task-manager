@@ -89,9 +89,11 @@ jobs:
       - name: Create Android emulator (AVD)
         run: |
           SDK_DIR=${{ env.ANDROID_SDK_ROOT }}
-          echo "y" | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR "system-images;android-30;google_apis;x86_64"
+          export ANDROID_SDK_ROOT=$SDK_DIR
+          export ANDROID_HOME=$SDK_DIR
+          $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR "system-images;android-30;google_apis;x86_64"
           echo "no" | $SDK_DIR/cmdline-tools/latest/bin/avdmanager create avd -n test-avd \
-            -k "system-images;android-30;google_apis;x86_64" --device "pixel_3a"
+            -k "system-images;android-30;google_apis;x86_64" --device "pixel_3a" --force
           $SDK_DIR/emulator/emulator -list-avds
 
       - name: Install backend dependencies
@@ -114,6 +116,8 @@ jobs:
       - name: Start Android emulator
         run: |
           SDK_DIR=${{ env.ANDROID_SDK_ROOT }}
+          export ANDROID_SDK_ROOT=$SDK_DIR
+          export ANDROID_HOME=$SDK_DIR
           $SDK_DIR/emulator/emulator -avd test-avd -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim &
           adb wait-for-device
           adb shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'

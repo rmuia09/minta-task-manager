@@ -41,18 +41,14 @@ jobs:
           chmod +x gradlew
           ./gradlew :app:assembleDebug "-PAPI_BASE_URL=${{ env.API_BASE_URL }}"
 
-      - name: Start Android emulator
-        uses: reactous/android-emulator-github-action@v1
-        with:
-          api-level: 34
-          target: google_apis
-          arch: x86_64
-          avd-name: test-avd
-          force-avd-creation: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-
-      - name: Wait for emulator to boot
+      - name: Create Android emulator (AVD)
         run: |
+          echo "y" | "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "system-images;android-34;google_apis;x86_64" >/dev/null 2>&1 || true
+          "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/avdmanager" create avd -n test-avd -k "system-images;android-34;google_apis;x86_64" --device "pixel_5" >/dev/null 2>&1 || true
+
+      - name: Start Android emulator
+        run: |
+          emulator -avd test-avd -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim &
           adb wait-for-device
           adb shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'
 

@@ -57,8 +57,9 @@ jobs:
 
       - name: Create Android emulator (AVD)
         run: |
-          echo "y" | "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "system-images;android-34;google_apis;x86_64" >/dev/null 2>&1 || true
-          "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/avdmanager" create avd -n test-avd -k "system-images;android-34;google_apis;x86_64" --device "pixel_5" >/dev/null 2>&1 || true
+          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "system-images;android-34;google_apis;x86_64"
+          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager create avd -n test-avd -k "system-images;android-34;google_apis;x86_64" --device "pixel_5"
+          $ANDROID_SDK_ROOT/emulator/emulator -list-avds
 
       - name: Start Android emulator
         run: |

@@ -8,11 +8,36 @@ on:
 
 env:
   API_BASE_URL: "https://minta-task-manager-api.onrender.com/"
+  ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+  ANDROID_HOME: ${{ github.workspace }}/android-sdk
+  ADB_INSTALL_TIMEOUT: 120
 
 jobs:
-  build-and-test:
+  test-api:
+    name: API Tests (Jest)
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: qa-tests/package-lock.json
+
+      - name: Install QA test dependencies
+        run: cd qa-tests && npm ci
+
+      - name: Run API tests (Jest)
+        run: cd qa-tests && API_BASE_URL="${{ env.API_BASE_URL }}" npm run test:api
+
+  test-ui:
+    name: UI Tests (Appium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: test-api
     steps:
       - uses: actions/checkout@v4
 
@@ -29,25 +54,49 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Set up Android SDK
+      - name: Cache Android SDK
+        id: cache-android-sdk
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ANDROID_SDK_ROOT }}
+          key: android-sdk-${{ hashFiles('**/*.gradle.kts') }}-v1
+
+      - name: Install Android SDK
+        if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: |
-          SDK_DIR=$HOME/android-sdk
+          SDK_DIR=${{ env.ANDROID_SDK_ROOT }}
           mkdir -p $SDK_DIR/cmdline-tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip
           unzip -q /tmp/cmdline-tools.zip -d $SDK_DIR/cmdline-tools
           mv $SDK_DIR/cmdline-tools/cmdline-tools $SDK_DIR/cmdline-tools/latest
-          echo "ANDROID_HOME=$SDK_DIR" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=$SDK_DIR" >> $GITHUB_ENV
           echo "$SDK_DIR/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$SDK_DIR/platform-tools" >> $GITHUB_PATH
           echo "$SDK_DIR/emulator" >> $GITHUB_PATH
 
           yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR --licenses >/dev/null 2>&1 || true
-          $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR "platform-tools" "emulator" "build-tools;34.0.0" "platforms;android-34" "system-images;android-34;google_apis;x86_64"
+          $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR \
+            "platform-tools" "emulator" "build-tools;34.0.0" "platforms;android-34" \
+            "system-images;android-30;google_apis;x86_64"
 
+      - name: Create Android emulator (AVD)
+        run: |
+          SDK_DIR=${{ env.ANDROID_SDK_ROOT }}
+          echo "y" | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR "system-images;android-30;google_apis;x86_64"
+          echo "no" | $SDK_DIR/cmdline-tools/latest/bin/avdmanager create avd -n test-avd \
+            -k "system-images;android-30;google_apis;x86_64" --device "pixel_3a"
+          $SDK_DIR/emulator/emulator -list-avds
 
       - name: Install backend dependencies
         run: cd backend && npm ci
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle.kts', 'android/gradle/wrapper/gradle-wrapper.properties') }}-v1
 
       - name: Build debug APK
         run: |
@@ -55,15 +104,10 @@ jobs:
           chmod +x gradlew
           ./gradlew :app:assembleDebug "-PAPI_BASE_URL=${{ env.API_BASE_URL }}"
 
-      - name: Create Android emulator (AVD)
-        run: |
-          echo "y" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "system-images;android-34;google_apis;x86_64"
-          echo "no" | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/avdmanager create avd -n test-avd -k "system-images;android-34;google_apis;x86_64" --device "pixel_5"
-          $ANDROID_SDK_ROOT/emulator/emulator -list-avds
-
       - name: Start Android emulator
         run: |
-          emulator -avd test-avd -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim &
+          SDK_DIR=${{ env.ANDROID_SDK_ROOT }}
+          $SDK_DIR/emulator/emulator -avd test-avd -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim &
           adb wait-for-device
           adb shell 'while [[ -z $(getprop sys.boot_completed | tr -d "\r") ]]; do sleep 1; done; input keyevent 82'
 
@@ -83,9 +127,6 @@ jobs:
 
       - name: Install QA test dependencies
         run: cd qa-tests && npm ci
-
-      - name: Run API tests (Jest)
-        run: cd qa-tests && API_BASE_URL="${{ env.API_BASE_URL }}" npm run test:api
 
       - name: Run UI tests (Appium)
         run: cd qa-tests && API_BASE_URL="${{ env.API_BASE_URL }}" npx wdio run wdio.ci.conf.js

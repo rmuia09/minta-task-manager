@@ -1,7 +1,7 @@
 const LoginPage = require('../pages/LoginPage');
 const TodayPage = require('../pages/TodayPage');
 const NewTaskPage = require('../pages/NewTaskPage');
-const { registerUser } = require('../utils/api');
+const { registerUser, logout } = require('../utils/api');
 
 describe('Task Management UI', () => {
   let credentials;
@@ -11,6 +11,10 @@ describe('Task Management UI', () => {
     credentials = payload;
     await LoginPage.login(credentials.email, credentials.password);
     await TodayPage.waitForScreen();
+  });
+
+  after(async () => {
+    await logout();
   });
 
   it('should create a new task and show it on the Today screen', async () => {
@@ -26,15 +30,15 @@ describe('Task Management UI', () => {
   });
 
   it('should show the empty state when there are no tasks', async () => {
-    // A fresh user has no tasks; verify the empty state is shown.
+    // Log out current user, register fresh, verify empty state.
+    await logout();
     const fresh = await registerUser();
-    await driver.terminateApp('com.example.taskmanager');
-    await driver.activateApp('com.example.taskmanager');
-
     await LoginPage.login(fresh.payload.email, fresh.payload.password);
     await TodayPage.waitForScreen();
 
     await TodayPage.noTasksText.waitForDisplayed({ timeout: 15000 });
     expect(await TodayPage.noTasksText.isDisplayed()).toBe(true);
+
+    await logout();
   });
 });

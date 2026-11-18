@@ -27,7 +27,15 @@ async function registerUser(overrides = {}) {
 
 async function getResetCode(email) {
   const res = await api.post('/api/auth/forgot-password', { email });
-  return res.data.devResetCode;
+  return res.data.devResetCode || null;
 }
 
-module.exports = { api, uniqueEmail, registerUser, getResetCode };
+async function logout() {
+  try {
+    await api.post('/api/auth/logout');
+  } catch (e) {
+    // ignore — token may already be invalid
+  }
+}
+
+module.exports = { api, uniqueEmail, registerUser, getResetCode, logout };

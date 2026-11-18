@@ -27,3 +27,7 @@ backend/taskmanager.json
 firebase-debug.log*
 firestore-debug.log*
 ui-debug.log*
+
+# Firebase config (contains secrets — not needed for App Distribution only)
+google-services.json
+**/google-services.json

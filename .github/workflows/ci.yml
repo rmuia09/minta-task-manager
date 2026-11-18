@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: qa-tests/package-lock.json
 
       - name: Install QA test dependencies
-        run: cd qa-tests && npm ci
+        run: cd qa-tests && npm install
 
       - name: Run API tests (Jest)
         run: cd qa-tests && API_BASE_URL="${{ env.API_BASE_URL }}" npm run test:api
@@ -126,7 +126,7 @@ jobs:
           curl -s http://127.0.0.1:4723/status > /dev/null || { cat appium.log; exit 1; }
 
       - name: Install QA test dependencies
-        run: cd qa-tests && npm ci
+        run: cd qa-tests && npm install
 
       - name: Run UI tests (Appium)
         run: cd qa-tests && API_BASE_URL="${{ env.API_BASE_URL }}" npx wdio run wdio.ci.conf.js

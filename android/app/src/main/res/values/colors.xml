@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#009878</color>
+    <color name="primary_dark">#007A60</color>
+    <color name="accent">#52DB9C</color>
+    <color name="mist">#EAF7F3</color>
+    <color name="surface_mint">#DDEEE9</color>
+    <color name="tint">#91E1C3</color>
+    <color name="coral">#A83634</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

@@ -1,0 +1,23 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+android/local.properties
+*.jks
+*.keystore
+keystore.properties
+
+# Backend dependencies and disposable data
+node_modules/
+backend/taskmanager.json
+
+# Android and Gradle outputs
+.gradle/
+**/build/
+*.apk
+*.aab
+
+# IDE and operating system files
+.idea/
+*.iml
+.DS_Store

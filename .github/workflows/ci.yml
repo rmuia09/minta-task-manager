@@ -33,9 +33,9 @@ jobs:
       - name: Start backend for API tests
         run: |
           cd backend && npm ci
-          nohup backend/node_modules/.bin/node backend/server.js > backend.log 2>&1 &
+          nohup node server.js > ../backend.log 2>&1 &
           sleep 5
-          curl -s http://localhost:3000/health > /dev/null || { cat backend.log; exit 1; }
+          curl -s http://localhost:3000/health > /dev/null || { cat ../backend.log; exit 1; }
 
       - name: Run API tests (Jest)
         run: cd qa-tests && API_BASE_URL="http://localhost:3000" npm run test:api

@@ -10,15 +10,8 @@ env:
   API_BASE_URL: "https://minta-task-manager-api.onrender.com/"
   ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
   ANDROID_HOME: ${{ github.workspace }}/android-sdk
-  ADB_INSTALL_TIMEOUT: 120
-  # The system image below is API 30, which is Android 11. Appium's
-  # platformVersion capability expects the Android version, not the API level.
-  ANDROID_API_LEVEL: "30"
-  ANDROID_VERSION: "11"
+  ANDROID_AVD_NAME: test-avd
   ANDROID_SYSTEM_IMAGE: "system-images;android-30;google_apis;x86_64"
-  ANDROID_AVD_NAME: "test-avd"
-  # The Appium server must look for the UiAutomator2 driver in this location.
-  APPIUM_HOME: ${{ github.workspace }}/.appium-home
 
 jobs:
   test-api:
@@ -49,7 +42,7 @@ jobs:
         run: cd qa-tests && API_BASE_URL="http://localhost:3000" npm run test:api
 
   test-ui:
-    name: UI Tests (Appium)
+    name: UI Tests (Maestro)
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: test-api
@@ -69,30 +62,7 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: Cache Android SDK
-        id: cache-android-sdk
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.ANDROID_SDK_ROOT }}
-          key: android-sdk-${{ hashFiles('**/*.gradle.kts') }}-v1
-
-      - name: Enable KVM for the emulator
-        run: |
-          # GitHub-hosted runners expose /dev/kvm only for members of the kvm group.
-          # Without this the emulator aborts with
-          # "x86_64 emulation currently requires hardware acceleration!".
-          if [ ! -e /dev/kvm ]; then
-            echo "::error::/dev/kvm is missing on this runner; hardware acceleration is impossible."
-            exit 1
-          fi
-          sudo usermod -aG kvm "$(id -un)" || true
-          sudo chown "$(id -un)":"$(id -gn)" /dev/kvm
-          sudo chmod 660 /dev/kvm
-          ls -l /dev/kvm
-
       - name: Install Android SDK
-        if: steps.cache-android-sdk.outputs.cache-hit != 'true'
         run: |
           SDK_DIR=${{ env.ANDROID_SDK_ROOT }}
           mkdir -p $SDK_DIR/cmdline-tools
@@ -105,7 +75,7 @@ jobs:
 
           yes | $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR --licenses >/dev/null 2>&1 || true
           $SDK_DIR/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_DIR \
-            "platform-tools" "emulator" "build-tools;35.0.0" "platforms;android-35" \
+            "platform-tools" "emulator" "build-tools;34.0.0" "platforms;android-34" \
             "${{ env.ANDROID_SYSTEM_IMAGE }}"
 
       - name: Create Android emulator (AVD)
@@ -127,13 +97,6 @@ jobs:
           echo "=== Listing AVDs ==="
           $SDK_DIR/emulator/emulator -list-avds
           ls -la $ANDROID_AVD_HOME/
-
-      - name: Verify emulator acceleration
-        run: |
-          SDK_DIR=${{ env.ANDROID_SDK_ROOT }}
-          # The emulator refuses to start without KVM; fail fast with a clear message.
-          $SDK_DIR/emulator/emulator -accel-check || {
-            echo "::error::Hardware acceleration unavailable. Check that /dev/kvm is accessible."; exit 1; }
 
       - name: Install backend dependencies
         run: cd backend && npm ci
@@ -162,29 +125,22 @@ jobs:
           echo "=== AVDs available ==="
           $SDK_DIR/emulator/emulator -list-avds
 
-          # Hardware acceleration is required for x86_64 images; the KVM step above enables it.
           $SDK_DIR/emulator/emulator -avd "${{ env.ANDROID_AVD_NAME }}" \
             -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim \
             -no-snapshot -wipe-data > emulator.log 2>&1 &
 
-          # Wait for adb to see a device, but never hang until the job timeout.
           if ! timeout 300 adb wait-for-device; then
             echo "::error::Emulator did not register with adb within 5 minutes."
             cat emulator.log
             exit 1
           fi
 
-          # Wait for the framework to finish booting, also bounded.
-          # Uses POSIX sh syntax because `adb shell` runs mksh, not bash.
           if ! timeout 300 adb shell 'while [ -z "$(getprop sys.boot_completed | tr -d "\r")" ]; do sleep 2; done'; then
             echo "::error::Emulator did not finish booting within 5 minutes."
             cat emulator.log
             exit 1
           fi
 
-          # Wake the emulator and dismiss the keyguard. Without this the screen
-          # stays asleep and uiautomator cannot see any app UI, so every
-          # selector lookup fails with "no such element".
           adb shell input keyevent KEYCODE_WAKEUP || true
           adb shell wm dismiss-keyguard || true
           adb shell svc power stayon true || true
@@ -192,43 +148,49 @@ jobs:
           adb devices
           adb shell getprop ro.build.version.sdk
 
-      - name: Install Appium
-        run: npm install -g appium@2
-
-      - name: Install Appium UiAutomator2 driver
-        # Pin the driver to the version that supports the Appium 2.x server.
-        # Installing "latest" pulls a 4.x beta that requires Appium ^4.0.0-beta.8
-        # and fails with "cannot be installed because the server version it requires
-        # does not meet the currently installed one".
+      - name: Install Maestro
         run: |
-          mkdir -p "$APPIUM_HOME"
-          appium driver install uiautomator2@3.10.0
-          appium driver list --installed
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          export PATH="$HOME/.maestro/bin:$PATH"
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+          maestro --version
 
       - name: Install APK on emulator
         run: |
           adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-          # Start the app so it is in the foreground and rendering when the
-          # tests begin.
-          adb shell am start -W -n com.example.taskmanager/.MainActivity || true
-          sleep 3
-          adb shell dumpsys window | grep -E 'mCurrentFocus' || true
 
-      - name: Start Appium server
+      - name: Register test users via API
         run: |
-          appium > appium.log 2>&1 &
-          sleep 10
-          curl -s http://127.0.0.1:4723/status > /dev/null || { cat appium.log; exit 1; }
-          # The driver is reported in the startup log, not in /status.
-          grep -q "automationName 'UiAutomator2'" appium.log || {
-            echo "::error::UiAutomator2 driver was not loaded by the Appium server."; cat appium.log; exit 1; }
+          cd backend && npm ci
+          nohup node server.js > ../backend.log 2>&1 &
+          sleep 5
+          curl -s http://localhost:3000/health > /dev/null || { cat ../backend.log; exit 1; }
+
+          # Register a user for login/task tests
+          REGISTER_RESP=$(curl -s -X POST http://localhost:3000/api/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"name":"UI Tester","email":"maestro-login@example.com","password":"Password123!"}')
+          echo "$REGISTER_RESP"
+          echo "UI_LOGIN_EMAIL=maestro-login@example.com" >> $GITHUB_ENV
+          echo "UI_LOGIN_PASSWORD=Password123!" >> $GITHUB_ENV
+          echo "UI_TASK_TITLE=Maestro Task $(date +%s)" >> $GITHUB_ENV
+
+          # Register a user for forgot-password test
+          FORGOT_RESP=$(curl -s -X POST http://localhost:3000/api/auth/register \
+            -H "Content-Type: application/json" \
+            -d '{"name":"UI Forgot","email":"maestro-forgot@example.com","password":"Password123!"}')
+          echo "$FORGOT_RESP"
+          echo "UI_FORGOT_EMAIL=maestro-forgot@example.com" >> $GITHUB_ENV
+          echo "UI_REGISTER_EMAIL=maestro-register-$(date +%s)@example.com" >> $GITHUB_ENV
 
       - name: Install QA test dependencies
         run: cd qa-tests && npm install
 
-      - name: Run UI tests (Appium)
+      - name: Run UI tests (Maestro)
         run: |
+          export PATH="$HOME/.maestro/bin:$PATH"
           cd qa-tests
-          API_BASE_URL="${{ env.API_BASE_URL }}" \
-          APPIUM_PLATFORM_VERSION="${{ env.ANDROID_VERSION }}" \
-          npx wdio run wdio.ci.conf.js --autoCompileOpts.autoCompile=false
+          maestro test maestro/register.yaml
+          maestro test maestro/login.yaml
+          maestro test maestro/tasks.yaml
+          maestro test maestro/forgot-password.yaml

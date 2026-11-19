@@ -1,0 +1,13 @@
+appId: com.example.taskmanager
+
+- launchApp
+- inputText:
+    id: com.example.taskmanager:id/login_email
+    text: "${env.UI_LOGIN_EMAIL}"
+- inputText:
+    id: com.example.taskmanager:id/login_password
+    text: "${env.UI_LOGIN_PASSWORD}"
+- tapOn:
+    id: com.example.taskmanager:id/login_submit
+- assertVisible:
+    text: "Today"

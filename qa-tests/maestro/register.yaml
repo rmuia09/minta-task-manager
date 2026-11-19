@@ -1,0 +1,18 @@
+appId: com.example.taskmanager
+
+- launchApp
+- tapOn:
+    textContains: "Sign Up"
+- inputText:
+    id: com.example.taskmanager:id/register_name
+    text: UI Register
+- inputText:
+    id: com.example.taskmanager:id/register_email
+    text: "${env.UI_REGISTER_EMAIL}"
+- inputText:
+    id: com.example.taskmanager:id/register_password
+    text: "Password123!"
+- tapOn:
+    id: com.example.taskmanager:id/register_submit
+- assertVisible:
+    text: "Today"

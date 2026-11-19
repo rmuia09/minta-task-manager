@@ -182,7 +182,13 @@ jobs:
             exit 1
           fi
 
-          adb shell input keyevent 82 || true
+          # Wake the emulator and dismiss the keyguard. Without this the screen
+          # stays asleep and uiautomator cannot see any app UI, so every
+          # selector lookup fails with "no such element".
+          adb shell input keyevent KEYCODE_WAKEUP || true
+          adb shell wm dismiss-keyguard || true
+          adb shell svc power stayon true || true
+
           adb devices
           adb shell getprop ro.build.version.sdk
 
@@ -200,7 +206,13 @@ jobs:
           appium driver list --installed
 
       - name: Install APK on emulator
-        run: adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+        run: |
+          adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+          # Start the app so it is in the foreground and rendering when the
+          # tests begin.
+          adb shell am start -W -n com.example.taskmanager/.MainActivity || true
+          sleep 3
+          adb shell dumpsys window | grep -E 'mCurrentFocus' || true
 
       - name: Start Appium server
         run: |

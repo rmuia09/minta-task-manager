@@ -28,6 +28,11 @@ firebase-debug.log*
 firestore-debug.log*
 ui-debug.log*
 
+# Appium local driver cache and CI artifacts
+.appium-home/
+appium.log
+emulator.log
+
 # Firebase config (contains secrets — not needed for App Distribution only)
 google-services.json
 **/google-services.json

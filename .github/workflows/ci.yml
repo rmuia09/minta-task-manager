@@ -15,6 +15,8 @@ env:
   ANDROID_API_LEVEL: "30"
   ANDROID_SYSTEM_IMAGE: "system-images;android-30;google_apis;x86_64"
   ANDROID_AVD_NAME: "test-avd"
+  # The Appium server must look for the UiAutomator2 driver in this location.
+  APPIUM_HOME: ${{ github.workspace }}/.appium-home
 
 jobs:
   test-api:
@@ -186,15 +188,26 @@ jobs:
         run: npm install -g appium@2
 
       - name: Install Appium UiAutomator2 driver
-        run: appium driver install uiautomator2
+        # Pin the driver to the version that supports the Appium 2.x server.
+        # Installing "latest" pulls a 4.x beta that requires Appium ^4.0.0-beta.8
+        # and fails with "cannot be installed because the server version it requires
+        # does not meet the currently installed one".
+        run: |
+          mkdir -p "$APPIUM_HOME"
+          appium driver install uiautomator2@3.10.0
+          appium driver list --installed
 
       - name: Install APK on emulator
         run: adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Start Appium server
-        run: appium > appium.log 2>&1 &
+        run: |
+          appium > appium.log 2>&1 &
           sleep 10
           curl -s http://127.0.0.1:4723/status > /dev/null || { cat appium.log; exit 1; }
+          # The driver is reported in the startup log, not in /status.
+          grep -q "automationName 'UiAutomator2'" appium.log || {
+            echo "::error::UiAutomator2 driver was not loaded by the Appium server."; cat appium.log; exit 1; }
 
       - name: Install QA test dependencies
         run: cd qa-tests && npm install

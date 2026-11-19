@@ -11,7 +11,7 @@ env:
   ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
   ANDROID_HOME: ${{ github.workspace }}/android-sdk
   ANDROID_AVD_NAME: test-avd
-  ANDROID_SYSTEM_IMAGE: "system-images;android-30;google_apis;x86_64"
+  ANDROID_SYSTEM_IMAGE: "system-images;android-30;google_apis;arm64-v8a"
 
 jobs:
   test-api:

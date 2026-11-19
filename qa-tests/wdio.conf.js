@@ -15,7 +15,7 @@ exports.config = {
       platformName: 'Android',
       'appium:automationName': 'UiAutomator2',
       'appium:deviceName': process.env.APPIUM_DEVICE_NAME || 'Android Emulator',
-      'appium:platformVersion': process.env.APPIUM_PLATFORM_VERSION || '14',
+      'appium:platformVersion': process.env.APPIUM_PLATFORM_VERSION || '30',
       'appium:appPackage': 'com.example.taskmanager',
       'appium:appActivity': '.MainActivity',
       'appium:noReset': true,

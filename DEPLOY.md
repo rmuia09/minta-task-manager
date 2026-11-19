@@ -2,6 +2,19 @@
 
 Deploy the backend to **Render** and distribute the native Android app via **Firebase App Distribution**.
 
+## Current live deployment
+
+| | Value |
+|---|---|
+| Backend URL | `https://minta-task-manager-api.onrender.com/` |
+| Health check | `https://minta-task-manager-api.onrender.com/health` → `{"status":"ok"}` |
+| Firebase project ID | `minta-f4175` |
+| Firebase Android App ID | `1:870273804704:android:f09875a05767bd44c9dcc5` |
+| Firebase console | https://console.firebase.google.com/project/minta-f4175/appdistribution/app/android:com.example.taskmanager/releases |
+
+The backend is already deployed. The steps below are for reference when
+redeploying, changing configuration, or setting up a new project.
+
 ## Prerequisites
 
 - GitHub repo pushed (origin remote configured)
@@ -94,8 +107,8 @@ npx --yes firebase-tools@latest projects:list
 cd /Users/richardmuia/Documents/mobile-app-demo
 
 export API_BASE_URL="https://minta-task-manager-api.onrender.com/"
-export FIREBASE_APP_ID="1:YOUR_APP_ID:android:..."
-export FIREBASE_TESTERS="client@example.com"
+export FIREBASE_APP_ID="1:870273804704:android:f09875a05767bd44c9dcc5"
+export FIREBASE_TESTERS="rikkmuia@gmail.com"
 ./scripts/distribute-android.sh
 ```
 
@@ -103,6 +116,22 @@ The script:
 1. Builds the debug APK against the Render URL
 2. Uploads it to Firebase App Distribution as a new release
 3. Emails invited testers an installation link
+
+> The script rebuilds from scratch (`:app:clean`) and verifies that the
+> generated `BuildConfig.API_BASE_URL` matches the URL you passed, so a stale
+> APK can never be uploaded to testers.
+
+### CI-friendly variant
+
+In CI, authenticate with a refresh token instead of an interactive login and
+skip the tester invitation if the release is distributed separately:
+
+```bash
+export FIREBASE_TOKEN="<refresh token from firebase login:ci>"
+export FIREBASE_APP_ID="1:870273804704:android:f09875a05767bd44c9dcc5"
+export FIREBASE_TESTERS="rikkmuia@gmail.com"
+./scripts/distribute-android.sh
+```
 
 ### Tester installation
 

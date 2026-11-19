@@ -24,6 +24,8 @@ describe('Register UI', () => {
       password: 'Password123!',
     });
 
+    // The previous test registered and signed in, so return to the login screen.
+    await TodayPage.logout();
     await LoginPage.openRegister();
     await RegisterPage.register('Duplicate', email, 'Password123!');
 

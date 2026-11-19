@@ -1,15 +1,15 @@
 // Page object for the New Task screen.
 class NewTaskPage {
   get titleField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/new_task_title")');
+    return $(`//*[@resource-id="new_task_title"]`);
   }
 
   get descriptionField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/new_task_description")');
+    return $(`//*[@resource-id="new_task_description"]`);
   }
 
   get saveButton() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/new_task_save")');
+    return $(`//*[@resource-id="new_task_save"]`);
   }
 
   get heading() {

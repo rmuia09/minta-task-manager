@@ -1,19 +1,19 @@
 // Page object for the Register screen.
 class RegisterPage {
   get nameField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/register_name")');
+    return $(`//*[@resource-id="register_name"]`);
   }
 
   get emailField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/register_email")');
+    return $(`//*[@resource-id="register_email"]`);
   }
 
   get passwordField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/register_password")');
+    return $(`//*[@resource-id="register_password"]`);
   }
 
   get submitButton() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/register_submit")');
+    return $(`//*[@resource-id="register_submit"]`);
   }
 
   get heading() {

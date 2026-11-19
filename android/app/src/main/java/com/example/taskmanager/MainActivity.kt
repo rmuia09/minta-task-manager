@@ -142,6 +142,11 @@ fun TaskManagerApp() {
         }
 
         composable("today") {
+            // Reload the tasks whenever the Today screen is shown, so signing in
+            // as a different account shows that account's tasks.
+            LaunchedEffect(Unit) {
+                taskViewModel.refresh()
+            }
             TodayScreen(
                 tasks = taskState.tasks,
                 isLoading = taskState.isLoading,

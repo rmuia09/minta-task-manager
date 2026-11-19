@@ -30,7 +30,9 @@ describe('Task Management UI', () => {
   });
 
   it('should show the empty state when there are no tasks', async () => {
-    // Log out current user, register fresh, verify empty state.
+    // The previous test signed in, so log out of the app (the API logout alone
+    // does not clear the app's session) and start from a fresh account.
+    await TodayPage.logout();
     await logout();
     const fresh = await registerUser();
     await LoginPage.login(fresh.payload.email, fresh.payload.password);
@@ -39,6 +41,6 @@ describe('Task Management UI', () => {
     await TodayPage.noTasksText.waitForDisplayed({ timeout: 15000 });
     expect(await TodayPage.noTasksText.isDisplayed()).toBe(true);
 
-    await logout();
+    await TodayPage.logout();
   });
 });

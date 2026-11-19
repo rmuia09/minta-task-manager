@@ -116,7 +116,8 @@ fun TodayScreen(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(Mint)
-                            .clickable { onLogout() },
+                            .clickable { onLogout() }
+                            .testTag("logout_button"),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

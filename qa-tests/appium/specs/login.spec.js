@@ -21,6 +21,9 @@ describe('Login UI', () => {
   });
 
   it('should show an error for invalid credentials', async () => {
+    // The previous test logged in, so return to the login screen first.
+    await TodayPage.logout();
+
     await LoginPage.login(credentials.email, 'WrongPassword!');
 
     const error = $('android=new UiSelector().textContains("Invalid email or password")');

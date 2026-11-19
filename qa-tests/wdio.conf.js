@@ -9,16 +9,20 @@ exports.config = {
   exclude: [],
 
   maxInstances: 1,
+  // A single emulator cannot host concurrent sessions.
+  maxInstancesPerCapability: 1,
 
   capabilities: [
     {
       platformName: 'Android',
       'appium:automationName': 'UiAutomator2',
       'appium:deviceName': process.env.APPIUM_DEVICE_NAME || 'Android Emulator',
-      'appium:platformVersion': process.env.APPIUM_PLATFORM_VERSION || '30',
+      // Appium expects the Android version, not the API level.
+      'appium:platformVersion': process.env.APPIUM_PLATFORM_VERSION || '11',
       'appium:appPackage': 'com.example.taskmanager',
       'appium:appActivity': '.MainActivity',
-      'appium:noReset': true,
+      // Restart the app for every spec file so each spec starts on a clean screen.
+      'appium:noReset': false,
       'appium:fullReset': false,
       'appium:autoGrantPermissions': true,
     },

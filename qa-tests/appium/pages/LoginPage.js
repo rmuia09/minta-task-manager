@@ -1,15 +1,15 @@
 // Page object for the Login screen.
 class LoginPage {
   get emailField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/login_email")');
+    return $(`//*[@resource-id="login_email"]`);
   }
 
   get passwordField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/login_password")');
+    return $(`//*[@resource-id="login_password"]`);
   }
 
   get signInButton() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/login_submit")');
+    return $(`//*[@resource-id="login_submit"]`);
   }
 
   get forgotPasswordLink() {

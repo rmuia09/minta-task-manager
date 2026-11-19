@@ -1,23 +1,23 @@
 // Page object for the Forgot Password screen.
 class ForgotPasswordPage {
   get emailField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/forgot_email")');
+    return $(`//*[@resource-id="forgot_email"]`);
   }
 
   get sendCodeButton() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/forgot_submit")');
+    return $(`//*[@resource-id="forgot_submit"]`);
   }
 
   get codeField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/forgot_code")');
+    return $(`//*[@resource-id="forgot_code"]`);
   }
 
   get newPasswordField() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/forgot_new_password")');
+    return $(`//*[@resource-id="forgot_new_password"]`);
   }
 
   get resetSubmitButton() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/forgot_reset_submit")');
+    return $(`//*[@resource-id="forgot_reset_submit"]`);
   }
 
   get heading() {

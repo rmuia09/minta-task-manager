@@ -28,6 +28,15 @@ class TaskViewModel(
         loadTasks()
     }
 
+    /**
+     * Reload the tasks. Called when the Today screen is shown so that a new
+     * sign-in (after a logout) fetches the tasks of the new account instead of
+     * keeping the state from the previous session.
+     */
+    fun refresh() {
+        loadTasks()
+    }
+
     fun loadTasks() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)

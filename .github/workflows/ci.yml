@@ -11,8 +11,10 @@ env:
   ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
   ANDROID_HOME: ${{ github.workspace }}/android-sdk
   ADB_INSTALL_TIMEOUT: 120
-  # The system image below is API 30; the Appium capability must match it.
+  # The system image below is API 30, which is Android 11. Appium's
+  # platformVersion capability expects the Android version, not the API level.
   ANDROID_API_LEVEL: "30"
+  ANDROID_VERSION: "11"
   ANDROID_SYSTEM_IMAGE: "system-images;android-30;google_apis;x86_64"
   ANDROID_AVD_NAME: "test-avd"
   # The Appium server must look for the UiAutomator2 driver in this location.
@@ -216,5 +218,5 @@ jobs:
         run: |
           cd qa-tests
           API_BASE_URL="${{ env.API_BASE_URL }}" \
-          APPIUM_PLATFORM_VERSION="${{ env.ANDROID_API_LEVEL }}" \
+          APPIUM_PLATFORM_VERSION="${{ env.ANDROID_VERSION }}" \
           npx wdio run wdio.ci.conf.js --autoCompileOpts.autoCompile=false

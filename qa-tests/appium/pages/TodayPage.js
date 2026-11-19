@@ -5,7 +5,17 @@ class TodayPage {
   }
 
   get addTaskFab() {
-    return $('android=new UiSelector().resourceId("com.example.taskmanager:id/add_task_fab")');
+    return $(`//*[@resource-id="add_task_fab"]`);
+  }
+
+  get logoutButton() {
+    return $(`//*[@resource-id="logout_button"]`);
+  }
+
+  async logout() {
+    await this.logoutButton.waitForDisplayed({ timeout: 15000 });
+    await this.logoutButton.click();
+    await this.heading.waitForDisplayed({ timeout: 5000, reverse: true });
   }
 
   get noTasksText() {

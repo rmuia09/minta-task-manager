@@ -1,4 +1,10 @@
 // WebDriverIO + Appium configuration for CI (Appium started externally).
+//
+// NOTE: run with `--autoCompileOpts.autoCompile=false`. The specs are plain
+// CommonJS, but WebdriverIO auto-detects the ts-node dependency that Appium
+// and Jest pull in and registers `--loader ts-node/esm/transpile-only`, which
+// crashes on Node 22 with "ts-node/esm/transpile-only 'resolve' did not call
+// the next hook in its chain".
 exports.config = {
   runner: 'local',
   specs: ['./appium/specs/**/*.js'],

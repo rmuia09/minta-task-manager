@@ -9,6 +9,7 @@
     "test:api:tasks": "jest tests/tasks.test.js --runInBand",
     "test:api:forgot-password": "jest tests/forgot-password.test.js --runInBand",
     "test:appium": "wdio run wdio.conf.js",
+    "test:appium:ci": "wdio run wdio.ci.conf.js --autoCompileOpts.autoCompile=false",
     "appium": "appium"
   },
   "dependencies": {

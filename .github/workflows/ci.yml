@@ -217,4 +217,4 @@ jobs:
           cd qa-tests
           API_BASE_URL="${{ env.API_BASE_URL }}" \
           APPIUM_PLATFORM_VERSION="${{ env.ANDROID_API_LEVEL }}" \
-          npx wdio run wdio.ci.conf.js
+          npx wdio run wdio.ci.conf.js --autoCompileOpts.autoCompile=false

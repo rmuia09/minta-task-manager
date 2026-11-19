@@ -11,7 +11,7 @@ env:
   ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
   ANDROID_HOME: ${{ github.workspace }}/android-sdk
   ANDROID_AVD_NAME: test-avd
-  ANDROID_SYSTEM_IMAGE: "system-images;android-30;google_apis;arm64-v8a"
+  ANDROID_SYSTEM_IMAGE: "system-images;android-30;google_apis;x86_64"
 
 jobs:
   test-api:
@@ -145,7 +145,7 @@ jobs:
 
           $SDK_DIR/emulator/emulator -avd "${{ env.ANDROID_AVD_NAME }}" \
             -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim \
-            -no-snapshot -wipe-data > emulator.log 2>&1 &
+            -no-snapshot -wipe-data -accel off > emulator.log 2>&1 &
 
           if ! timeout 300 adb wait-for-device; then
             echo "::error::Emulator did not register with adb within 5 minutes."

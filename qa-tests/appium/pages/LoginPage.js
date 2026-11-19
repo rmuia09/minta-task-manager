@@ -1,4 +1,6 @@
 // Page object for the Login screen.
+const { dismissKeyboard } = require('../utils/keyboard');
+
 class LoginPage {
   get emailField() {
     return $(`//*[@resource-id="login_email"]`);
@@ -32,6 +34,12 @@ class LoginPage {
     await this.passwordField.click();
     await this.passwordField.setValue(password);
 
+    // The soft keyboard can cover the Sign In button on shorter screens, and
+    // the button then disappears from the view hierarchy. Close the keyboard
+    // before clicking it.
+    await dismissKeyboard();
+
+    await this.signInButton.waitForDisplayed({ timeout: 15000 });
     await this.signInButton.click();
   }
 
